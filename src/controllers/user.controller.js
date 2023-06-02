@@ -13,7 +13,7 @@ function getUserDetails(request, response) {
   User
     .findById(id)
     .then(row => {
-      if(!row) {
+      if (!row) {
         return response.json({ status: "fail" })
       }
       response.json(row)
@@ -22,7 +22,18 @@ function getUserDetails(request, response) {
 }
 
 function createUser(request, response) {
-  return response.send("POST CREATE USER");
+  const body = request.body;
+  if (!body.email) {
+    return response.status(400).send("Email is requried....")
+  }
+  const user = new User({
+    email: body.email,
+    name: body.name
+  });
+  user
+    .save()
+    .then(dbUser => response.json(dbUser))
+    .catch(error => response.status(400).send(error))
 }
 
 function updateUser(request, response) {
@@ -30,13 +41,36 @@ function updateUser(request, response) {
 }
 
 function deleteUser(request, response) {
-  return response.send("DELETE USER DATA");
+  const id = request.params.userId;
+  User
+    .findByIdAndRemove(id)
+    .then(value => response.send("User Delete"))
+    .catch(error => response.status(400).send(error))
 }
+
+function login(request, response) {
+  const body = request.body;
+  const email = body.email;
+  if (!email) {
+    return response.status(400).send("Email is required...");
+  }
+  User
+    .findOne({ email: email })
+    .then(value => {
+      if (!value) {
+        return response.status(400).send(`${email} is not found in DB`);
+      }
+      response.send(value);
+    })
+    .catch(error => response.send(error))
+}
+
 module.exports = {
   getAllUsers,
   createUser,
   updateUser,
   deleteUser,
 
-  getUserDetails
+  getUserDetails,
+  login,
 }
